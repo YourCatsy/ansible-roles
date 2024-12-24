@@ -1,4 +1,14 @@
 ---
+- name: Check if artisan exists
+  ansible.builtin.stat:
+    path: "{{ app_path }}/artisan"
+  register: artisan_file
+
+- name: Fail if artisan not found
+  ansible.builtin.fail:
+    msg: "Laravel artisan file not found at {{ app_path }}"
+  when: not artisan_file.stat.exists
+
 - name: Test database connection
   ansible.builtin.command:
     cmd: php artisan db:connect
@@ -21,10 +31,20 @@
     update: yes
   become: true
 
+- name: Check application directory content
+  ansible.builtin.command:
+    cmd: ls -l "{{ app_path }}"
+  register: app_dir_content
+  ignore_errors: yes
+
+- debug:
+    var: app_dir_content.stdout_lines
+
 - name: Install Composer dependencies
-  ansible.builtin.composer:
-    command: install
-    working_dir: "{{ app_path }}"
+  ansible.builtin.command:
+    cmd: composer install
+  args:
+    chdir: "{{ app_path }}"
   environment:
     COMPOSER_ALLOW_SUPERUSER: 1
 
