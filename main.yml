@@ -10,3 +10,6 @@
   become: yes
   roles:
     - db
+
+- name: Deploy Laravel Application
+  include_tasks: roles/server/tasks/deploy.yml

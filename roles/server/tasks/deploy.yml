@@ -1,78 +1,63 @@
 ---
-- name: Deploy Laravel Application
-  hosts: webservers
-  vars:
-    app_path: /var/www/html
-    app_repo: "git@github.com:your/repository.git"
-  tasks:
+# Убираем `hosts`, оставляем только задачи
+- name: Ensure the application directory is clean
+  ansible.builtin.file:
+    path: "{{ app_path }}"
+    state: absent
+  become: true
 
-    - name: Ensure the application directory is clean
-      ansible.builtin.file:
-        path: "{{ app_path }}"
-        state: absent
-      become: true
+- name: Clone application repository
+  ansible.builtin.git:
+    repo: "{{ app_repo }}"
+    dest: "{{ app_path }}"
+    clone: yes
+    update: yes
+  become: true
 
-    - name: Clone application repository
-      ansible.builtin.git:
-        repo: "{{ app_repo }}"
-        dest: "{{ app_path }}"
-        clone: yes
-        update: yes
-      become: true
+- name: Check if artisan exists
+  ansible.builtin.stat:
+    path: "{{ app_path }}/artisan"
+  register: artisan_file
 
-    - name: Check if artisan exists
-      ansible.builtin.stat:
-        path: "{{ app_path }}/artisan"
-      register: artisan_file
+- name: Fail if artisan not found
+  ansible.builtin.fail:
+    msg: "Laravel artisan file not found at {{ app_path }}"
+  when: not artisan_file.stat.exists
 
-    - name: Fail if artisan not found
-      ansible.builtin.fail:
-        msg: "Laravel artisan file not found at {{ app_path }}"
-      when: not artisan_file.stat.exists
+- name: Install Composer dependencies
+  ansible.builtin.command:
+    cmd: composer install
+  args:
+    chdir: "{{ app_path }}"
+  environment:
+    COMPOSER_ALLOW_SUPERUSER: 1
 
-    - name: Install Composer dependencies
-      ansible.builtin.command:
-        cmd: composer install
-      args:
-        chdir: "{{ app_path }}"
-      environment:
-        COMPOSER_ALLOW_SUPERUSER: 1
+- name: Install npm dependencies
+  community.general.npm:
+    path: "{{ app_path }}"
 
-    - name: Install npm dependencies
-      community.general.npm:
-        path: "{{ app_path }}"
+- name: Create .env file from template
+  template:
+    src: templates/app.conf.j2
+    dest: "{{ app_path }}/.env"
+    owner: www-data
+    group: www-data
+    mode: '0644'
 
-    - name: Create .env file from template
-      template:
-        src: templates/app.conf.j2
-        dest: "{{ app_path }}/.env"
-        owner: www-data
-        group: www-data
-        mode: '0644'
+- name: Generate application key
+  ansible.builtin.command:
+    cmd: php artisan key:generate
+  args:
+    chdir: "{{ app_path }}"
 
-    - name: Generate application key
-      ansible.builtin.command:
-        cmd: php artisan key:generate
-      args:
-        chdir: "{{ app_path }}"
+- name: Migrate database
+  ansible.builtin.command:
+    cmd: php artisan migrate
+  args:
+    chdir: "{{ app_path }}"
 
-    - name: Migrate database
-      ansible.builtin.command:
-        cmd: php artisan migrate
-      args:
-        chdir: "{{ app_path }}"
-
-    - name: Build front-end assets
-      ansible.builtin.command:
-        cmd: npm run build
-      args:
-        chdir: "{{ app_path }}"
-
-    - name: Check application directory content
-      ansible.builtin.command:
-        cmd: ls -l "{{ app_path }}"
-      register: app_dir_content
-      ignore_errors: yes
-
-    - debug:
-        var: app_dir_content.stdout_lines
+- name: Build front-end assets
+  ansible.builtin.command:
+    cmd: npm run build
+  args:
+    chdir: "{{ app_path }}"
