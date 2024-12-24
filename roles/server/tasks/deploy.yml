@@ -1,4 +1,12 @@
 ---
+- name: Test database connection
+  ansible.builtin.command:
+    cmd: php artisan db:connect
+  args:
+    chdir: "{{ app_path }}"
+  register: db_connection
+  failed_when: "'Successfully connected' not in db_connection.stdout"
+
 - name: Ensure the application directory is clean
   ansible.builtin.file:
     path: "{{ app_path }}"
