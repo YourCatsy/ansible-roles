@@ -1,5 +1,3 @@
----
-# Убираем `hosts`, оставляем только задачи
 - name: Ensure the application directory is clean
   ansible.builtin.file:
     path: "{{ app_path }}"
@@ -49,14 +47,16 @@
     cmd: php artisan key:generate
   args:
     chdir: "{{ app_path }}"
-    
-- name: Output .env file
-  ansible.builtin.shell: cat /path/to/your/project/.env
-  register: env_file_contents
 
-- name: Show .env contents
+- name: Check if .env file exists
+  ansible.builtin.stat:
+    path: "{{ app_path }}/.env"
+  register: env_file_stat
+
+- name: Show .env contents if exists
   ansible.builtin.debug:
-    msg: "{{ env_file_contents.stdout_lines }}"
+    msg: "{{ lookup('file', env_file_stat.stat.path) }}"
+  when: env_file_stat.stat.exists
 
 - name: Migrate database
   ansible.builtin.command:
@@ -67,5 +67,8 @@
 - name: Build front-end assets
   ansible.builtin.command:
     cmd: npm run build
+  args:
+    chdir: "{{ app_path }}"
+
   args:
     chdir: "{{ app_path }}"
