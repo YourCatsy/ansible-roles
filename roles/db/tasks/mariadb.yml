@@ -29,6 +29,7 @@
     priv: "{{ db_name }}.*:ALL"
     host: "localhost"
     state: present
+  become: true
 
 - name: Debug MariaDB user list
   ansible.builtin.command: "sudo mysql -s -e \"SELECT User, Host FROM mysql.user;\""
