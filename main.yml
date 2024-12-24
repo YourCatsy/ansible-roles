@@ -17,4 +17,3 @@
   tasks:
     - name: Deploy Laravel Application
       include_tasks: roles/server/tasks/deploy.yml
-  include_tasks: roles/server/tasks/deploy.yml
