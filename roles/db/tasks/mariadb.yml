@@ -1,0 +1,33 @@
+---
+- name: Install MariaDB server
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - python3-pymysql
+    update_cache: yes
+
+- name: Start MariaDB service
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set root password
+  ansible.builtin.mysql_user:
+    name: root
+    password: "{{ root_pass }}"
+    host: localhost
+    state: present
+
+- name: Create database
+  ansible.builtin.mysql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: Create application user
+  ansible.builtin.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_pass }}"
+    priv: "{{ db_name }}.*:ALL"
+    host: '%'
+    state: present

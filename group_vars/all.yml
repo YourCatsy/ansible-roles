@@ -1,0 +1,8 @@
+app_path: /var/www/html
+app_repo: https://github.com/Practical-DevOps/app-for-devops
+apache_user: www-data
+
+db_name: lrv
+db_user: lrv
+db_pass: lrvpass
+root_pass: rootpassword

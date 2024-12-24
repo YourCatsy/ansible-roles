@@ -1,0 +1,19 @@
+---
+- name: Install Apache
+  ansible.builtin.apt:
+    name: apache2
+
+- name: Enable Apache rewrite module
+  community.general.apache2_module:
+    state: present
+    name: rewrite
+
+- name: Configure Apache
+  ansible.builtin.template:
+    src: apache.conf.j2
+    dest: /etc/apache2/sites-available/app.conf
+
+- name: Enable site configuration
+  ansible.builtin.command:
+    cmd: a2ensite app
+  notify: Restart Apache

@@ -1,0 +1,12 @@
+---
+- name: Include PHP installation
+  include_tasks: php.yml
+
+- name: Include Node.js installation
+  include_tasks: node.yml
+
+- name: Include Apache configuration
+  include_tasks: apache.yml
+
+- name: Deploy Laravel application
+  include_tasks: deploy.yml

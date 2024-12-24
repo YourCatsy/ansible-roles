@@ -1,0 +1,51 @@
+---
+- name: Ensure the application directory is clean
+  ansible.builtin.file:
+    path: "{{ app_path }}"
+    state: absent
+  become: true
+
+- name: Clone application repository
+  ansible.builtin.git:
+    repo: "{{ app_repo }}"
+    dest: "{{ app_path }}"
+    clone: yes
+    update: yes
+  become: true
+
+- name: Install Composer dependencies
+  ansible.builtin.composer:
+    command: install
+    working_dir: "{{ app_path }}"
+  environment:
+    COMPOSER_ALLOW_SUPERUSER: 1
+
+- name: Install npm dependencies
+  community.general.npm:
+    path: "{{ app_path }}"
+
+- name: Создать файл .env из шаблона
+  template:
+    src: templates/app.conf.j2
+    dest: /var/www/html/.env
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Generate application key
+  ansible.builtin.command:
+    cmd: php artisan key:generate
+  args:
+    chdir: "{{ app_path }}"
+
+- name: Migrate database
+  ansible.builtin.command:
+    cmd: php artisan migrate
+  args:
+    chdir: "{{ app_path }}"
+
+- name: Build front-end
+  ansible.builtin.command:
+    cmd: npm run build
+  args:
+    chdir: "{{ app_path }}"

@@ -1,0 +1,6 @@
+---
+- name: Deploy database server
+  hosts: db
+  become: yes
+  roles:
+    - db_server

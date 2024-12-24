@@ -1,0 +1,12 @@
+---
+- name: Setup Web Servers
+  hosts: server
+  become: yes
+  roles:
+    - server
+
+- name: Setup Database Servers
+  hosts: db
+  become: yes
+  roles:
+    - db

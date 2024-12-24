@@ -1,0 +1,17 @@
+---
+- name: Add PHP repository
+  ansible.builtin.apt_repository:
+    repo: ppa:ondrej/php
+    state: present
+
+- name: Install PHP 8.2 and dependencies
+  ansible.builtin.apt:
+    name:
+      - php8.2
+      - php8.2-cli
+      - php8.2-curl
+      - php8.2-bz2
+      - php8.2-mbstring
+      - php8.2-intl
+      - php8.2-xml
+      - php8.2-mysql
