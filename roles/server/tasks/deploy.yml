@@ -49,6 +49,14 @@
     cmd: php artisan key:generate
   args:
     chdir: "{{ app_path }}"
+    
+- name: Output .env file
+  ansible.builtin.shell: cat /path/to/your/project/.env
+  register: env_file_contents
+
+- name: Show .env contents
+  ansible.builtin.debug:
+    msg: "{{ env_file_contents.stdout_lines }}"
 
 - name: Migrate database
   ansible.builtin.command:
