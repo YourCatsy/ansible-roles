@@ -62,10 +62,9 @@
   ansible.builtin.wait_for:
     host: "{{ db_host }}"
     port: 3306
-    delay: 10  # задержка перед первым запросом
-    timeout: 60  # время ожидания в секундах
-
-
+    delay: 10
+    timeout: 120  
+    
 - name: Migrate database
   ansible.builtin.command:
     cmd: php artisan migrate
