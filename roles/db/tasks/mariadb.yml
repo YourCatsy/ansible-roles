@@ -12,25 +12,12 @@
     state: started
     enabled: yes
 
-- name: Ensure root authentication uses mysql_native_password
+- name: Set root password and ensure mysql_native_password plugin is used
   ansible.builtin.command: >
     sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ root_pass }}'; FLUSH PRIVILEGES;"
-  register: auth_update
   ignore_errors: yes
 
-- name: Debug root authentication update
-  ansible.builtin.debug:
-    msg: "Root authentication update output: {{ auth_update.stdout }}"
-
-- name: Set root password
-  ansible.builtin.mysql_user:
-    name: root
-    password: "{{ root_pass }}"
-    host: localhost
-    state: present
-  ignore_errors: yes
-
-- name: Create database
+- name: Create application database
   ansible.builtin.mysql_db:
     name: "{{ db_name }}"
     state: present
@@ -40,7 +27,7 @@
     name: "{{ db_user }}"
     password: "{{ db_pass }}"
     priv: "{{ db_name }}.*:ALL"
-    host: localhost
+    host: "127.0.0.1"
     state: present
 
 - name: Debug MariaDB user list
