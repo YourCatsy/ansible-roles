@@ -58,6 +58,14 @@
     msg: "{{ lookup('file', env_file_stat.stat.path) }}"
   when: env_file_stat.stat.exists
 
+- name: Wait for MariaDB to be ready
+  ansible.builtin.wait_for:
+    host: "{{ db_host }}"
+    port: 3306
+    delay: 10  # задержка перед первым запросом
+    timeout: 60  # время ожидания в секундах
+
+
 - name: Migrate database
   ansible.builtin.command:
     cmd: php artisan migrate
