@@ -1,0 +1,11 @@
+---
+
+- hosts: db
+  become: yes
+  roles:
+    - db
+
+- hosts: server
+  become: yes
+  roles:
+    - server

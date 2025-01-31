@@ -1,0 +1,56 @@
+---
+
+- name: Start message
+  ansible.builtin.debug:
+    msg: 'Create task to install and preparing DB server'
+
+- name: Install PostgreSQL
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    update_cache: yes
+
+- name: Restart PostgreSQL server
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+
+- name: Get path to PostgreSQL config file
+  ansible.builtin.command:
+    cmd: sudo -u postgres psql -t -P format=unaligned -c 'SHOW hba_file;'
+  register: hba_file
+
+- name: Create a new user
+  ansible.builtin.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_pass }}"
+  become_user: postgres
+
+- name: Create a new database
+  ansible.builtin.postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+  become_user: postgres
+
+- name: Set listen addresses to all
+  ansible.builtin.postgresql_set:
+    name: listen_addresses
+    value: '*'
+  become_user: postgres
+  notify:
+  - Restart PostgreSQL
+
+- name: Grant user access to database using peer authentication
+  ansible.builtin.postgresql_pg_hba:
+    dest: "{{ hba_file.stdout }}"
+    contype: host
+    users: "{{ db_user }}"
+    source: all
+    databases: "{{ db_name }}"
+    method: scram-sha-256
+    create: true
+  become_user: postgres
+  notify:
+  - Restart PostgreSQL
